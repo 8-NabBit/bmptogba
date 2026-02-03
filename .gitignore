@@ -5,7 +5,7 @@
 !.gitignore
 
 # folders
-!*/.vscode
+# !*/.vscode
 
 # c files
 !*.c
@@ -13,3 +13,6 @@
 
 # notes
 !*.md*
+
+# makefile
+!Makefile
