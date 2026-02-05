@@ -200,15 +200,16 @@ gba *bitmap_convert_to_gba(const bitmap *bmp) {
     }
 
     // sprites
-    for (int i = 0; i < bitmap_get_n_sprites(bmp); i++) {
+    for (int sprite = 0; sprite < bitmap_get_n_sprites(bmp); sprite++) {
         // only horizontal right now
         unsigned n_tiles = (bitmap_get_x_length(bmp) / bitmap_get_n_sprites(bmp) / 8) * 
                            (bitmap_get_y_length(bmp) / 8);
         unsigned char **tiles_ptr_array = malloc(n_tiles * sizeof(unsigned char *));
 
         // tiles
-        for (int i = 0; i < n_tiles; i++) {
-            
+        for (int tile = 0; tile < n_tiles; tile++) {
+            unsigned char *tile_ptr = bitmap_get_tile(bmp, sprite, tile);
+            tiles_ptr_array[tile] = tile_ptr;
         }
 
     }
