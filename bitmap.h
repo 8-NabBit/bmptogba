@@ -1,6 +1,6 @@
 typedef struct bitmap {
-    unsigned int size_x;
-    unsigned int size_y;
+    unsigned size_x;
+    unsigned size_y;
     size_t n_sprites;
     unsigned char colors[16][3];
     size_t pixel_data_size;
@@ -8,6 +8,7 @@ typedef struct bitmap {
 } bitmap;
 
 typedef struct gba {
+    size_t pixel_data_size;
     void *pixel_data;
 } gba;
 
@@ -21,6 +22,8 @@ bitmap *bitmap_init(FILE *f);
 /*  Prints all components of the bitmap, not pixel data */
 void bitmap_stats(const bitmap *bmp);
 
+void bitmap_free(bitmap *bmp);
+
 /*  Checks if both sizes are multiples of 8
 
     Returns 1 if true, 0 if it fails
@@ -28,10 +31,10 @@ void bitmap_stats(const bitmap *bmp);
 int bitmap_size_correct(const bitmap *bmp);
 
 /*  Gets the horizontal size of the bitmap */
-unsigned int bitmap_get_x_length(const bitmap *bmp);
+unsigned bitmap_get_x_length(const bitmap *bmp);
 
 /*  Gets the vertical size of the bitmap */
-unsigned int bitmap_get_y_length(const bitmap *bmp);
+unsigned bitmap_get_y_length(const bitmap *bmp);
 
 /*  Gets the number of sprites in the bitmap */
 size_t bitmap_get_n_sprites(const bitmap *bmp);
@@ -40,7 +43,7 @@ size_t bitmap_get_n_sprites(const bitmap *bmp);
 size_t bitmap_get_pixel_data_size(const bitmap *bmp);
 
 /*  Gets the pixel data on the bitmap, given x and y */
-unsigned char bitmap_get_pixel(const bitmap *bmp, const unsigned int sprite_id, const unsigned int x, const unsigned int y);
+unsigned char bitmap_get_pixel(const bitmap *bmp, const unsigned sprite_id, const unsigned x, const unsigned y);
 
 /*  Reads a number of bytes from a certain offset in a file with
     an endianness of little.

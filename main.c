@@ -7,8 +7,8 @@ int main(int argc, char* argv[]) {
 
     if (argc == 1) {
         printf(
-            "Arguments for bmp to gba converter:\n"
-            "\"bmppath\" -stats -colormode");
+            "Arguments for bmp to gba converter: "
+            "\"bmppath\" -stats -colormode\n");
         return 0;
     }
 
@@ -24,10 +24,14 @@ int main(int argc, char* argv[]) {
     bitmap_stats(bmp);
 
     gba *gameboy = bitmap_convert_to_gba(bmp);
+    bitmap_free(bmp);
+
     f = fopen("output.bin", "wb");
         
     
     fclose(f);
+
+    free(gameboy);
 
     return 0;
 }

@@ -4,22 +4,27 @@
 #include "bitmap.h"
 
 #define N_COLORS 16
+#define TILE_SIZE 64
+#define BMP_HEADER_X_SIZE_OFFSET 0x12
+#define BMP_HEADER_Y_SIZE_OFFSET 0x16
+#define BMP_HEADER_COLOR_OFFSET 0x36
 
 bitmap *bitmap_init(FILE *f) {
     
     bitmap *bmp = malloc(sizeof(bitmap));
 
     // sizes
-    bmp->size_x = (unsigned int)read_le(f, 4, 0x12);
-    bmp->size_y = (unsigned int)read_le(f, 4, 0x16);
+    bmp->size_x = (unsigned)read_le(f, 4, BMP_HEADER_X_SIZE_OFFSET);
+    bmp->size_y = (unsigned)read_le(f, 4, BMP_HEADER_Y_SIZE_OFFSET);
     if (!bitmap_size_correct(bmp)) {
         perror("bitmap size not good\n");
+        bitmap_free(bmp);
         exit(1);
     }
 
     // amount of sprites based on total image dimensions
-    unsigned int x_length = (unsigned)bitmap_get_x_length(bmp);
-    unsigned int y_length = (unsigned)bitmap_get_y_length(bmp);
+    unsigned x_length = (unsigned)bitmap_get_x_length(bmp);
+    unsigned y_length = (unsigned)bitmap_get_y_length(bmp);
     if (x_length > 64) {
         bmp->n_sprites = x_length / y_length;
     } else if (y_length > 64) {
@@ -31,7 +36,7 @@ bitmap *bitmap_init(FILE *f) {
     // load colors (uses the first 16 it sees)
     for (int i = 0; i < N_COLORS; i++) {
         for (int j = 0; j <= 2; j++) {
-            bmp->colors[i][j] = (unsigned char)read_le(f, 1, 0x36+i*4+j);
+            bmp->colors[i][j] = (unsigned char)read_le(f, 1, BMP_HEADER_COLOR_OFFSET+i*4+j);
         }
     }
     
@@ -44,12 +49,21 @@ bitmap *bitmap_init(FILE *f) {
     return bmp;
 }
 
+void bitmap_free(bitmap *bmp) {
+    if (!bmp) {
+        return;
+    }
+    free(bmp->pixel_data);
+    free(bmp);
+}
+
 void bitmap_stats(const bitmap *bmp) {
     if (bmp == NULL) {
         perror("bmp null");
         exit(1);
     }
     printf("Image size: %ux%u\n", bitmap_get_x_length(bmp), bitmap_get_y_length(bmp));
+    printf("Number of sprites: 0x%zu\n", bitmap_get_n_sprites(bmp));
     printf("Pixel data size: 0x%06lX\n", bitmap_get_pixel_data_size(bmp));
 
     printf("Colors: ");
@@ -74,7 +88,7 @@ int bitmap_size_correct(const bitmap *bmp) {
     return 1;
 }
 
-unsigned int bitmap_get_x_length(const bitmap *bmp) {
+unsigned bitmap_get_x_length(const bitmap *bmp) {
     if (bmp == NULL) {
         perror("bmp null");
         exit(1);
@@ -82,7 +96,7 @@ unsigned int bitmap_get_x_length(const bitmap *bmp) {
     return bmp->size_x;
 }
 
-unsigned int bitmap_get_y_length(const bitmap *bmp) {
+unsigned bitmap_get_y_length(const bitmap *bmp) {
     if (bmp == NULL) {
         perror("bmp null");
         exit(1);
@@ -120,15 +134,17 @@ size_t read_le(FILE *f, int n_bytes, long offset) {
             perror("end of file character read\n");
             exit(1);
         }
+        // bitshift right for even x
+        // AND upper bits
         val |= ((size_t)c) << (8 * i);
     }
     return val;
 }
 
 unsigned char bitmap_get_pixel(const bitmap *bmp,
-                               const unsigned int sprite_id,
-                               const unsigned int x,
-                               const unsigned int y)
+                               const unsigned sprite_id,
+                               const unsigned x,
+                               const unsigned y)
 {
     if (bmp == NULL) {
         perror("bmp null");
@@ -137,20 +153,37 @@ unsigned char bitmap_get_pixel(const bitmap *bmp,
 
     if (x > bitmap_get_x_length(bmp) || y > bitmap_get_y_length(bmp)) {
         perror("out of bounds");
+        bitmap_free(bmp);
         exit(1);
     }
 
-    unsigned int row = (unsigned int)bitmap_get_pixel_data_size(bmp) - bitmap_get_y_length(bmp)*y;
-    unsigned int col = sprite_id*64 + x;
+    unsigned row = (unsigned)bitmap_get_pixel_data_size(bmp) - bitmap_get_y_length(bmp)*y;
+    unsigned col = sprite_id*64 + x;
 
     unsigned char p = bmp->pixel_data[row + col];
 
-    // bitshift right for even x
-    // AND upper bits
     if (x % 2 == 0) {
         return p;
     }
     return p;
+}
+
+unsigned char *bitmap_get_tile(const bitmap *bmp,
+                               const unsigned sprite_id,
+                               const unsigned tile)
+{
+    if (bmp == NULL) {
+        perror("bmp null");
+        exit(1);
+    }
+
+    unsigned x = bitmap_get_x_length(bmp) / bitmap_get_n_sprites(bmp);
+    unsigned y = bitmap_get_y_length(bmp);
+    unsigned pos = x * y;
+
+    printf("%d, %d, %d\n\n", x, y, pos);
+
+    return;
 }
 
 gba *bitmap_convert_to_gba(const bitmap *bmp) {
@@ -159,20 +192,25 @@ gba *bitmap_convert_to_gba(const bitmap *bmp) {
         exit(1);
     }
 
-    size_t bmp_size = bitmap_get_pixel_data_size(bmp);
-    gba *g = malloc(bmp_size);
+    gba *g = malloc(bitmap_get_pixel_data_size(bmp));
     if (g == NULL) {
         perror("failed allocating gba");
+        bitmap_free(bmp);
         exit(1);
     }
 
-    size_t size_counter = 0;
-    while (size_counter != bmp_size) {
+    // sprites
+    for (int i = 0; i < bitmap_get_n_sprites(bmp); i++) {
+        // only horizontal right now
+        unsigned n_tiles = (bitmap_get_x_length(bmp) / bitmap_get_n_sprites(bmp) / 8) * 
+                           (bitmap_get_y_length(bmp) / 8);
+        unsigned char **tiles_ptr_array = malloc(n_tiles * sizeof(unsigned char *));
 
-        for (int i = 0; i >= bitmap_get_n_sprites(bmp); i++) {
-
-            unsigned char p = bitmap_get_pixel(bmp, i, i, i);
+        // tiles
+        for (int i = 0; i < n_tiles; i++) {
+            
         }
+
     }
 
     return g;
