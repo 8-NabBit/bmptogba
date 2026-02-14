@@ -152,8 +152,8 @@ unsigned char bitmap_get_pixel(const bitmap *bmp,
     }
 
     if (x > bitmap_get_x_length(bmp) || y > bitmap_get_y_length(bmp)) {
-        perror("out of bounds");
         bitmap_free(bmp);
+        perror("out of bounds");
         exit(1);
     }
 
@@ -177,13 +177,22 @@ unsigned char *bitmap_get_tile(const bitmap *bmp,
         exit(1);
     }
 
-    unsigned x = bitmap_get_x_length(bmp) / bitmap_get_n_sprites(bmp);
-    unsigned y = bitmap_get_y_length(bmp);
-    unsigned pos = x * y;
+    if (sprite_id < bitmap_get_n_sprites(bmp) || sprite_id >= bitmap_get_n_sprites(bmp)) {
+        bitmap_free(bmp);
+        perror("sprite id is not in bounds");
+        exit(1);
+    }
 
-    printf("%d, %d, %d\n\n", x, y, pos);
+    // 0x100 is for 64x64 bitmaps, could also be calculated
+    int row = bitmap_get_n_sprites(bmp) * (tile / 8) * 0x100;
+    // specifies the sprite
+    int sprites_row_width = (bitmap_get_n_sprites(bmp) - sprite_id) * 0x20;
+    // (0, 0) in the tile
+    int tile_offset = bitmap_get_pixel_data_size(bmp) - row - sprites_row_width;
 
-    return;
+    unsigned char *tile;
+
+    return tile;
 }
 
 gba *bitmap_convert_to_gba(const bitmap *bmp) {
@@ -212,6 +221,8 @@ gba *bitmap_convert_to_gba(const bitmap *bmp) {
             tiles_ptr_array[tile] = tile_ptr;
         }
 
+
+        free(tiles_ptr_array);
     }
 
     return g;
