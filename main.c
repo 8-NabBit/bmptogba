@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
     bitmap_stats(bmp);
 
-    gba *gameboy = bitmap_convert_to_gba(bmp);
+    gameboy *gba = bitmap_convert_to_gba(bmp);
     bitmap_free(bmp);
 
     f = fopen("output.bin", "wb");
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     
     fclose(f);
 
-    free(gameboy);
+    gameboy_free(gba);
 
     return 0;
 }

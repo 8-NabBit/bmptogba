@@ -1,4 +1,4 @@
-typedef struct bitmap {
+typedef struct {
     unsigned size_x;
     unsigned size_y;
     size_t n_sprites;
@@ -7,9 +7,10 @@ typedef struct bitmap {
     unsigned char *pixel_data;
 } bitmap;
 
-typedef struct gba {
+typedef struct {
+    size_t n_tiles;
     unsigned char **tiles_ptr_array;
-} gba;
+} gameboy;
 
 /*  Initializes the bitmap and allocate it to memory
     
@@ -55,4 +56,6 @@ size_t file_read_le(FILE *f, int n_bytes, long offset);
     
     Returns a pointer to a gba type on the heap
 */
-gba *bitmap_convert_to_gba(const bitmap *bmp);
+gameboy *bitmap_convert_to_gba(const bitmap *bmp);
+
+void gameboy_free(gameboy *gba);
