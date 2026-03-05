@@ -8,8 +8,7 @@ typedef struct bitmap {
 } bitmap;
 
 typedef struct gba {
-    size_t pixel_data_size;
-    void *pixel_data;
+    unsigned char **tiles_ptr_array;
 } gba;
 
 /*  Initializes the bitmap and allocate it to memory
@@ -42,15 +41,15 @@ size_t bitmap_get_n_sprites(const bitmap *bmp);
 /*  Gets the size of the pixel data of the bitmap */
 size_t bitmap_get_pixel_data_size(const bitmap *bmp);
 
-/*  Gets the pixel data on the bitmap, given x and y */
-unsigned char bitmap_get_pixel(const bitmap *bmp, const unsigned sprite_id, const unsigned x, const unsigned y);
+/*  Gets the swapped pixel data of two pixels on the bitmap, given an offset */
+unsigned char bitmap_get_pixel(const bitmap *bmp, const long offset);
 
 /*  Reads a number of bytes from a certain offset in a file with
     an endianness of little.
     
     Returns a size_t number or 0 if file is NULL
 */
-size_t read_le(FILE *f, int n_bytes, long offset);
+size_t file_read_le(FILE *f, int n_bytes, long offset);
 
 /*  Converts a bitmap type to a gba type
     
