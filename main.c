@@ -22,16 +22,18 @@ int main(int argc, char* argv[]) {
     fclose(f);
 
     gameboy *gba = bitmap_convert_to_gba(bmp);
+
     bitmap_stats(bmp);
     printf("\n\n");
     gameboy_stats(gba);
-
-    bitmap_free(bmp);
+    for (int i = 0; i < (bitmap_get_n_sprites(bmp)*64); i++) {
+        gameboy_print_tile(gba, i);
+    }
 
     f = fopen("output.bin", "wb");
-    
     fclose(f);
 
+    bitmap_free(bmp);
     gameboy_free(gba);
 
     return 0;

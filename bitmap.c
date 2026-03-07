@@ -2,10 +2,8 @@
 #include <stdlib.h>
 
 #include "bitmap.h"
+#include "macros.h"
 
-#define N_COLORS 16
-#define TILE_SIZE 0x20
-#define TILES_IN_SPRITE 64
 #define SPRITE_DIMENSION 64
 #define BMP_HEADER_X_SIZE_OFFSET 0x12
 #define BMP_HEADER_Y_SIZE_OFFSET 0x16
@@ -192,11 +190,13 @@ unsigned char *bitmap_read_tile(const bitmap *bmp, long offset) {
         exit(1);
     }
 
+    long row_width = (long)(bitmap_get_x_length(bmp) / 2);
+
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 4; col++) {
-            data[row*4+col] = bitmap_get_pixel(bmp, offset+col);
+            data[row * 4 + col] = bitmap_get_pixel(bmp, offset + col);
         }
-        offset -= TILE_SIZE*bitmap_get_n_sprites(bmp);
+        offset -= row_width;
     }
 
     return data;
@@ -209,21 +209,28 @@ unsigned char *bitmap_get_tile(const bitmap *bmp, const unsigned sprite_id, cons
     }
 
     if (sprite_id >= bitmap_get_n_sprites(bmp)) {
-        bitmap_free(bmp);
         fprintf(stderr, "error: sprite id is not in bounds\n");
         exit(1);
     }
 
-    // 0x100 is for 64x64 bitmaps, could also be calculated
-    int row = bitmap_get_n_sprites(bmp) * (tile / 8) * 0x100;
-    // specifies the sprite
-    int sprites_row_width = (bitmap_get_n_sprites(bmp) - sprite_id) * TILE_SIZE;
-    // (0, 0) in the tile
-    int tile_offset = bitmap_get_pixel_data_size(bmp) - row - sprites_row_width;
+    unsigned sprites_per_row = bitmap_get_x_length(bmp) / SPRITE_DIMENSION;
+    long row_width = (long)(bitmap_get_x_length(bmp) / 2);
 
-    unsigned char *tile_ptr = bitmap_read_tile(bmp, tile_offset);
+    unsigned tile_row = tile / 8;
+    unsigned tile_col = tile % 8;
 
-    return tile_ptr;
+    unsigned sprite_row = sprite_id / sprites_per_row;
+    unsigned sprite_col = sprite_id % sprites_per_row;
+
+    // bottom-left of the sprite sheet is offset 0 in BMP
+    // calculate the bottom row of this specific tile
+    long tile_x_byte = (long)((sprite_col * SPRITE_DIMENSION + tile_col * 8) / 2);
+    long tile_y_row = (long)((sprite_row * SPRITE_DIMENSION + tile_row * 8));
+
+    // BMP starts at bottom, so invert y
+    long tile_offset = (long)(bitmap_get_pixel_data_size(bmp)) - (tile_y_row + 1) * row_width + tile_x_byte;
+
+    return bitmap_read_tile(bmp, tile_offset);
 }
 
 gameboy *bitmap_convert_to_gba(const bitmap *bmp) {

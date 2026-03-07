@@ -15,6 +15,6 @@ void gameboy_free(gameboy *gba);
 void gameboy_stats(gameboy *gba);
 
 /*  Prints all the contents of a tile */
-void gameboy_print_tile(gameboy *gba);
+void gameboy_print_tile(gameboy *gba, int tile);
 
 #endif
