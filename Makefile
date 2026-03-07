@@ -21,7 +21,7 @@ CFLAGS = \
 -Wstrict-prototypes \
 `pkg-config --cflags check` \
 -Wno-unused-parameter
-OBJ = main.o bitmap.o
+OBJ = main.o bitmap.o gba.o
 TARGET = bmptogba
 
 $(TARGET): $(OBJ)
@@ -32,6 +32,9 @@ main.o: main.c bitmap.h
 
 bitmap.o: bitmap.c bitmap.h
 	$(CC) $(CFLAGS) -c bitmap.c
+
+gba.o: gba.c gba.h
+	$(CC) $(CFLAGS) -c gba.c
 
 clean:
 	rm -f $(OBJ) $(TARGET)

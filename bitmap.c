@@ -72,12 +72,12 @@ void bitmap_free(bitmap *bmp) {
     free(bmp);
 }
 
-void print_stats(const bitmap *bmp, const gameboy *gba) {
-    if (bmp == NULL || gba == NULL) {
+void bitmap_stats(const bitmap *bmp) {
+    if (bmp == NULL) {
         fprintf(stderr, "error: bmp or gba null\n");
         exit(1);
     }
-    printf("Bitmap:\n");
+    printf("Bitmap 4BPP:\n");
     printf("Image size: %ux%u\n", bitmap_get_x_length(bmp), bitmap_get_y_length(bmp));
     printf("Number of sprites: 0x%zu\n", bitmap_get_n_sprites(bmp));
     printf("Pixel data size: 0x%06lX\n", bitmap_get_pixel_data_size(bmp));
@@ -88,10 +88,6 @@ void print_stats(const bitmap *bmp, const gameboy *gba) {
         }
         printf(" ");
     }
-    printf("\n\n");
-
-    printf("GBA 4BPP:\n");
-    printf("Amount of tiles: %zu\n", gba->n_tiles);
 }
 
 int bitmap_size_correct(const bitmap *bmp) {
@@ -261,16 +257,4 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     }
 
     return gba;
-}
-
-void gameboy_free(gameboy *gba) {
-    if (!gba) {
-        return;
-    }
-
-    for (unsigned i = 0; i < gba->n_tiles; i++) {
-        free(gba->tiles_ptr_array[i]);
-    }
-    free(gba->tiles_ptr_array);
-    free(gba);
 }

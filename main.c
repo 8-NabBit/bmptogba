@@ -22,12 +22,13 @@ int main(int argc, char* argv[]) {
     fclose(f);
 
     gameboy *gba = bitmap_convert_to_gba(bmp);
-    print_stats(bmp, gba);
+    bitmap_stats(bmp);
+    printf("\n\n");
+    gameboy_stats(gba);
 
     bitmap_free(bmp);
 
     f = fopen("output.bin", "wb");
-        
     
     fclose(f);
 

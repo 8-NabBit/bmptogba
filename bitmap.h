@@ -1,3 +1,8 @@
+#ifndef BITMAP_H
+#define BITMAP_H
+
+#include "gba.h"
+
 typedef struct {
     unsigned size_x;
     unsigned size_y;
@@ -7,11 +12,6 @@ typedef struct {
     unsigned char *pixel_data;
 } bitmap;
 
-typedef struct {
-    size_t n_tiles;
-    unsigned char **tiles_ptr_array;
-} gameboy;
-
 /*  Initializes the bitmap and allocate it to memory
     
     Returns a pointer to the bitmap struct or returns 
@@ -19,8 +19,8 @@ typedef struct {
 */
 bitmap *bitmap_init(FILE *f);
 
-/*  Write stats of the bitmap and gba */
-void print_stats(const bitmap *bmp, const gameboy *gba);
+/*  Write stats of the bitmap */
+void bitmap_stats(const bitmap *bmp);
 
 void bitmap_free(bitmap *bmp);
 
@@ -64,4 +64,4 @@ size_t file_read_le(FILE *f, int n_bytes, long offset);
 */
 gameboy *bitmap_convert_to_gba(const bitmap *bmp);
 
-void gameboy_free(gameboy *gba);
+#endif
