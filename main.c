@@ -21,9 +21,9 @@ int main(int argc, char* argv[]) {
     bitmap *bmp = bitmap_init(f);
     fclose(f);
 
-    bitmap_stats(bmp);
-
     gameboy *gba = bitmap_convert_to_gba(bmp);
+    print_stats(bmp, gba);
+
     bitmap_free(bmp);
 
     f = fopen("output.bin", "wb");

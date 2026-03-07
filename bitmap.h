@@ -19,8 +19,8 @@ typedef struct {
 */
 bitmap *bitmap_init(FILE *f);
 
-/*  Prints all components of the bitmap, not pixel data */
-void bitmap_stats(const bitmap *bmp);
+/*  Write stats of the bitmap and gba */
+void print_stats(const bitmap *bmp, const gameboy *gba);
 
 void bitmap_free(bitmap *bmp);
 
@@ -35,6 +35,12 @@ unsigned bitmap_get_x_length(const bitmap *bmp);
 
 /*  Gets the vertical size of the bitmap */
 unsigned bitmap_get_y_length(const bitmap *bmp);
+
+/*  Sets the number of sprites based on bitmap dimensions 
+
+    Side effects: sets the number of sprites in the given bitmap
+*/
+void bitmap_set_n_sprites(bitmap *bmp);
 
 /*  Gets the number of sprites in the bitmap */
 size_t bitmap_get_n_sprites(const bitmap *bmp);

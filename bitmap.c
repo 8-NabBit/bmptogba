@@ -5,7 +5,8 @@
 
 #define N_COLORS 16
 #define TILE_SIZE 0x20
-#define SPRITE_SIZE 64
+#define TILES_IN_SPRITE 64
+#define SPRITE_DIMENSION 64
 #define BMP_HEADER_X_SIZE_OFFSET 0x12
 #define BMP_HEADER_Y_SIZE_OFFSET 0x16
 #define BMP_HEADER_COLOR_OFFSET 0x36
@@ -28,15 +29,7 @@ bitmap *bitmap_init(FILE *f) {
     }
 
     // amount of sprites based on total image dimensions
-    unsigned x_length = (unsigned)bitmap_get_x_length(bmp);
-    unsigned y_length = (unsigned)bitmap_get_y_length(bmp);
-    if (x_length > 64) {
-        bmp->n_sprites = x_length / y_length;
-    } else if (y_length > 64) {
-        bmp->n_sprites = y_length / x_length;
-    } else if (x_length == 64 || y_length == 64) {
-        bmp->n_sprites = 1;
-    }
+    bitmap_set_n_sprites(bmp);
 
     // load colors (uses the first 16 it sees)
     for (int i = 0; i < N_COLORS; i++) {
@@ -79,15 +72,15 @@ void bitmap_free(bitmap *bmp) {
     free(bmp);
 }
 
-void bitmap_stats(const bitmap *bmp) {
-    if (bmp == NULL) {
-        fprintf(stderr, "error: bmp null\n");
+void print_stats(const bitmap *bmp, const gameboy *gba) {
+    if (bmp == NULL || gba == NULL) {
+        fprintf(stderr, "error: bmp or gba null\n");
         exit(1);
     }
+    printf("Bitmap:\n");
     printf("Image size: %ux%u\n", bitmap_get_x_length(bmp), bitmap_get_y_length(bmp));
     printf("Number of sprites: 0x%zu\n", bitmap_get_n_sprites(bmp));
     printf("Pixel data size: 0x%06lX\n", bitmap_get_pixel_data_size(bmp));
-
     printf("Colors: ");
     for (int i = 0; i < N_COLORS; i++) {
         for (int j = 0; j <= 2; j++) {
@@ -95,7 +88,10 @@ void bitmap_stats(const bitmap *bmp) {
         }
         printf(" ");
     }
-    printf("\n");
+    printf("\n\n");
+
+    printf("GBA 4BPP:\n");
+    printf("Amount of tiles: %zu\n", gba->n_tiles);
 }
 
 int bitmap_size_correct(const bitmap *bmp) {
@@ -124,6 +120,10 @@ unsigned bitmap_get_y_length(const bitmap *bmp) {
         exit(1);
     }
     return bmp->size_y;
+}
+
+void bitmap_set_n_sprites(bitmap *bmp) {
+    bmp->n_sprites = (bitmap_get_x_length(bmp) / SPRITE_DIMENSION) * (bitmap_get_y_length(bmp) / SPRITE_DIMENSION);
 }
 
 size_t bitmap_get_n_sprites(const bitmap *bmp) {
@@ -206,16 +206,13 @@ unsigned char *bitmap_read_tile(const bitmap *bmp, long offset) {
     return data;
 }
 
-unsigned char *bitmap_get_tile(const bitmap *bmp,
-                               const unsigned sprite_id,
-                               const unsigned tile)
-{
+unsigned char *bitmap_get_tile(const bitmap *bmp, const unsigned sprite_id, const unsigned tile) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
         exit(1);
     }
 
-    if (sprite_id < 0 || sprite_id >= bitmap_get_n_sprites(bmp)) {
+    if (sprite_id >= bitmap_get_n_sprites(bmp)) {
         bitmap_free(bmp);
         fprintf(stderr, "error: sprite id is not in bounds\n");
         exit(1);
@@ -239,15 +236,13 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
         exit(1);
     }
 
-    // only horizontal right now
-    unsigned n_tiles = (bitmap_get_x_length(bmp) / bitmap_get_n_sprites(bmp) / 8) * (bitmap_get_y_length(bmp) / 8);
-
     gameboy *gba = malloc(sizeof(gameboy));
     if (gba == NULL) {
         fprintf(stderr, "error: failed allocating gba\n");
         exit(1);
     }
 
+    size_t n_tiles = bitmap_get_n_sprites(bmp) * TILES_IN_SPRITE;
     gba->n_tiles = n_tiles;
 
     gba->tiles_ptr_array = malloc(n_tiles * sizeof(unsigned char *));
@@ -259,9 +254,9 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     // sprites
     for (int sprite = 0; sprite < bitmap_get_n_sprites(bmp); sprite++) {
         // tiles
-        for (int tile = 0; tile < n_tiles; tile++) {
+        for (int tile = 0; tile < TILES_IN_SPRITE; tile++) {
             unsigned char *tile_ptr = bitmap_get_tile(bmp, sprite, tile);
-            gba->tiles_ptr_array[tile] = tile_ptr;
+            gba->tiles_ptr_array[sprite * TILES_IN_SPRITE + tile] = tile_ptr;
         }
     }
 
@@ -269,7 +264,7 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
 }
 
 void gameboy_free(gameboy *gba) {
-    if (!gba) {\
+    if (!gba) {
         return;
     }
 
