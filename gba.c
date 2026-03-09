@@ -27,3 +27,24 @@ void gameboy_print_tile(gameboy *gba, int tile) {
     }
     printf("\n");
 }
+
+int gameboy_write_to_file(gameboy *gba) {
+    FILE *f = fopen("output.gba", "wb");
+    if (f == NULL) {
+        fprintf(stderr, "error: output file ptr null\n");
+        return 0;
+    }
+
+    for (size_t i = 0; i < gba->n_tiles; i++) {
+        int n = fwrite(gba->tiles_ptr_array[i], sizeof(unsigned char), TILE_SIZE, f);
+
+        if (!(n == TILE_SIZE)) {
+            printf("Number of objects written is incorrect\n");
+            fclose(f);
+            return 0;
+        }
+    }
+    
+    fclose(f);
+    return 1;
+}

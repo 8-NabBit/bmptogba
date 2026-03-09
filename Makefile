@@ -38,5 +38,6 @@ gba.o: gba.c gba.h
 
 clean:
 	rm -f $(OBJ) $(TARGET)
+	rm -f ./output.gba
 
 .PHONY: clean

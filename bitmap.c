@@ -14,7 +14,7 @@ bitmap *bitmap_init(FILE *f) {
     bitmap *bmp = malloc(sizeof(bitmap));
     if (!bmp) {
         fprintf(stderr, "error: bmp null init\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // sizes
@@ -23,7 +23,7 @@ bitmap *bitmap_init(FILE *f) {
     if (!bitmap_size_correct(bmp)) {
         fprintf(stderr, "error: bitmap size not good\n");
         bitmap_free(bmp);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // amount of sprites based on total image dimensions
@@ -43,20 +43,20 @@ bitmap *bitmap_init(FILE *f) {
     bmp->pixel_data = malloc(bmp->pixel_data_size);
     if (!bmp->pixel_data) {
         fprintf(stderr, "error: bmp pixel data init failed\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (fseek(f, (long)pixel_offset, SEEK_SET) != 0) {
         fprintf(stderr, "error: fseek to pixel data failed\n");
         bitmap_free(bmp);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     size_t data_read = fread(bmp->pixel_data, 1, bmp->pixel_data_size, f);
     if (data_read != bmp->pixel_data_size) {
         fprintf(stderr, "error: fread pixel_data failed\n");
         bitmap_free(bmp);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     return bmp;
@@ -73,7 +73,7 @@ void bitmap_free(bitmap *bmp) {
 void bitmap_stats(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp or gba null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     printf("Bitmap 4BPP:\n");
     printf("Image size: %ux%u\n", bitmap_get_x_length(bmp), bitmap_get_y_length(bmp));
@@ -91,7 +91,7 @@ void bitmap_stats(const bitmap *bmp) {
 int bitmap_size_correct(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (bitmap_get_x_length(bmp) % 8 != 0 || bitmap_get_y_length(bmp) % 8 != 0) {
@@ -103,7 +103,7 @@ int bitmap_size_correct(const bitmap *bmp) {
 unsigned bitmap_get_x_length(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return bmp->size_x;
 }
@@ -111,7 +111,7 @@ unsigned bitmap_get_x_length(const bitmap *bmp) {
 unsigned bitmap_get_y_length(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return bmp->size_y;
 }
@@ -123,7 +123,7 @@ void bitmap_set_n_sprites(bitmap *bmp) {
 size_t bitmap_get_n_sprites(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return bmp->n_sprites;
 }
@@ -131,7 +131,7 @@ size_t bitmap_get_n_sprites(const bitmap *bmp) {
 size_t bitmap_get_pixel_data_size(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return bmp->pixel_data_size;
 }
@@ -148,7 +148,7 @@ size_t file_read_le(FILE *f, int n_bytes, long offset) {
         int c = fgetc(f);
         if (c == EOF) {
             fprintf(stderr, "error: end of file character read\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         // bitshift right for even x
         // AND upper bits
@@ -160,17 +160,17 @@ size_t file_read_le(FILE *f, int n_bytes, long offset) {
 unsigned char bitmap_get_pixel(const bitmap *bmp, const long offset) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (bmp->pixel_data == NULL) {
         fprintf(stderr, "error: bmp pixel_data null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (offset < 0 || (size_t)offset >= bitmap_get_pixel_data_size(bmp)) {
         fprintf(stderr, "error: pixel offset out of bounds\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // swap the lower and higher 4 bits
@@ -181,13 +181,13 @@ unsigned char bitmap_get_pixel(const bitmap *bmp, const long offset) {
 unsigned char *bitmap_read_tile(const bitmap *bmp, long offset) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     unsigned char *data = malloc(TILE_SIZE);
     if (data == NULL) {
         fprintf(stderr, "error: failed allocating tile data\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     long row_width = (long)(bitmap_get_x_length(bmp) / 2);
@@ -205,12 +205,12 @@ unsigned char *bitmap_read_tile(const bitmap *bmp, long offset) {
 unsigned char *bitmap_get_tile(const bitmap *bmp, const unsigned sprite_id, const unsigned tile) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (sprite_id >= bitmap_get_n_sprites(bmp)) {
         fprintf(stderr, "error: sprite id is not in bounds\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     unsigned sprites_per_row = bitmap_get_x_length(bmp) / SPRITE_DIMENSION;
@@ -236,13 +236,13 @@ unsigned char *bitmap_get_tile(const bitmap *bmp, const unsigned sprite_id, cons
 gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     gameboy *gba = malloc(sizeof(gameboy));
     if (gba == NULL) {
         fprintf(stderr, "error: failed allocating gba\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     size_t n_tiles = bitmap_get_n_sprites(bmp) * TILES_IN_SPRITE;
@@ -251,7 +251,7 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     gba->tiles_ptr_array = malloc(n_tiles * sizeof(unsigned char *));
     if (gba->tiles_ptr_array == NULL) {
         fprintf(stderr, "error: failed allocating ptr array\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // sprites
