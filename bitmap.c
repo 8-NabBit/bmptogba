@@ -7,7 +7,13 @@
 #define SPRITE_DIMENSION 64
 #define BMP_HEADER_X_SIZE_OFFSET 0x12
 #define BMP_HEADER_Y_SIZE_OFFSET 0x16
-#define BMP_HEADER_COLOR_OFFSET 0x36
+#define BMP_HEADER_COLOR_OFFSET(f) (file_read_le(f, 4, 0xE) + 0xE)
+
+enum RGB {
+    BLUE,
+    GREEN,
+    RED
+};
 
 bitmap *bitmap_init(FILE *f) {
     
@@ -30,11 +36,7 @@ bitmap *bitmap_init(FILE *f) {
     bitmap_set_n_sprites(bmp);
 
     // load colors (uses the first 16 it sees)
-    for (int i = 0; i < N_COLORS; i++) {
-        for (int j = 0; j <= 2; j++) {
-            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, BMP_HEADER_COLOR_OFFSET+i*4+j);
-        }
-    }
+    bitmap_set_colors(f, bmp);
     
     // allocate pixel data based on certain sizes in file
     size_t total_size = file_read_le(f, 4, 0x2);
@@ -157,6 +159,35 @@ size_t file_read_le(FILE *f, int n_bytes, long offset) {
     return val;
 }
 
+void bitmap_swap_tires(bitmap *bmp) {
+
+}
+
+void bitmap_set_colors(FILE *f, bitmap *bmp) {
+    for (int i = 0; i < N_COLORS; i++) {
+        for (int j = 0; j <= 2; j++) {
+            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, BMP_HEADER_COLOR_OFFSET(f)+i*4+j);
+        }
+    }
+}
+
+unsigned short bitmap_color_to_gba(bitmap *bmp, int idx)
+{
+    unsigned short r = bmp->colors[idx][RED];
+    unsigned short g = bmp->colors[idx][GREEN];
+    unsigned short b = bmp->colors[idx][BLUE];
+
+    unsigned short color =
+          ((r >> 3) & 31)
+        | (((g >> 3) & 31) << 5)
+        | (((b >> 3) & 31) << 10);
+    
+    // set highest unused bit, not perfect but mksc is very inconsistent with it
+    color |= ((r >= 128 && g >= 128 && b >= 128) << 15);
+
+    return color;
+}
+
 unsigned char bitmap_get_pixel(const bitmap *bmp, const long offset) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
@@ -261,6 +292,13 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
             unsigned char *tile_ptr = bitmap_get_tile(bmp, sprite, tile);
             gba->tiles_ptr_array[sprite * TILES_IN_SPRITE + tile] = tile_ptr;
         }
+    }
+
+    // colors
+    for (int i = 0; i < N_COLORS; i++) {
+        printf("%u, %u, %u\n", bmp->colors[i][RED], bmp->colors[i][GREEN], bmp->colors[i][BLUE]);
+        gba->colors[i] = bitmap_color_to_gba(bmp, i);
+        printf("%04X\n", gba->colors[i]);
     }
 
     return gba;

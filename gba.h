@@ -5,6 +5,7 @@
 
 typedef struct {
     size_t n_tiles;
+    unsigned short colors[16];
     unsigned char **tiles_ptr_array;
 } gameboy;
 
