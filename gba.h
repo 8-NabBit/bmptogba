@@ -18,4 +18,6 @@ void gameboy_stats(gameboy *gba);
 /*  Prints all the contents of a tile */
 void gameboy_print_tile(gameboy *gba, int tile);
 
+int gameboy_write_to_file(gameboy *gba);
+
 #endif

@@ -19,6 +19,11 @@ void gameboy_free(gameboy *gba) {
 void gameboy_stats(gameboy *gba) {
     printf("GBA 4BPP:\n");
     printf("Amount of tiles: %zu\n", gba->n_tiles);
+    printf("Colors: \n");
+    for (int i = 0; i < N_COLORS; i++) {
+        printf("%04X ", gba->colors[i]);
+    }
+    printf("\n");
 }
 
 void gameboy_print_tile(gameboy *gba, int tile) {

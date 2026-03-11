@@ -22,6 +22,8 @@ bitmap *bitmap_init(FILE *f);
 /*  Write stats of the bitmap */
 void bitmap_stats(const bitmap *bmp);
 
+void bitmap_print_pixel_data(const bitmap *bmp);
+
 void bitmap_free(bitmap *bmp);
 
 /*  Checks if both sizes are multiples of 8
@@ -57,6 +59,10 @@ unsigned char bitmap_get_pixel(const bitmap *bmp, const long offset);
     Returns a size_t number or 0 if file is NULL
 */
 size_t file_read_le(FILE *f, int n_bytes, long offset);
+
+void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b);
+
+void bitmap_swap_tires(bitmap *bmp);
 
 /*  Converts a bitmap type to a gba type
     

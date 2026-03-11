@@ -90,6 +90,18 @@ void bitmap_stats(const bitmap *bmp) {
     }
 }
 
+void bitmap_print_pixel_data(const bitmap *bmp) {
+    if (bmp == NULL || bmp->pixel_data == NULL) {
+        fprintf(stderr, "error: bmp null\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (size_t i = 0; i < bmp->pixel_data_size; i++) {
+        printf("%02X ", bmp->pixel_data[i]);
+    }
+    printf("\n");
+}
+
 int bitmap_size_correct(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
@@ -157,6 +169,43 @@ size_t file_read_le(FILE *f, int n_bytes, long offset) {
         val |= ((size_t)c) << (8 * i);
     }
     return val;
+}
+
+void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b) {
+    if (bmp == NULL || bmp->pixel_data == NULL) {
+        fprintf(stderr, "error: bmp null\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (a >= N_COLORS || b >= N_COLORS) {
+        fprintf(stderr, "error: can't swap entries that dont exist");
+        exit(EXIT_FAILURE);
+    }
+
+    a &= 0x0F;
+    b &= 0x0F;
+
+    // build remap table with identity, but swap a and b
+    unsigned char remap[16];
+    for (int i = 0; i < 16; i++) {
+        remap[i] = i;
+        remap[a] = b;
+        remap[b] = a;
+    
+        // swap palette color entries
+        for (int j = 0; j < 3; j++) {
+            unsigned char temp = bmp->colors[a][j];
+            bmp->colors[a][j] = bmp->colors[b][j];
+            bmp->colors[b][j] = temp;
+        }
+    }
+
+    // remap every nibble in pixel data
+    for (size_t i = 0; i < bmp->pixel_data_size; i++) {
+        unsigned char lo = remap[bmp->pixel_data[i] & 0x0F];
+        unsigned char hi = remap[(bmp->pixel_data[i] >> 4) & 0x0F];
+        bmp->pixel_data[i] = (unsigned char)((hi << 4) | lo);
+    }
 }
 
 void bitmap_swap_tires(bitmap *bmp) {
@@ -296,9 +345,9 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
 
     // colors
     for (int i = 0; i < N_COLORS; i++) {
-        printf("%u, %u, %u\n", bmp->colors[i][RED], bmp->colors[i][GREEN], bmp->colors[i][BLUE]);
+        // printf("%u, %u, %u\n", bmp->colors[i][RED], bmp->colors[i][GREEN], bmp->colors[i][BLUE]);
         gba->colors[i] = bitmap_color_to_gba(bmp, i);
-        printf("%04X\n", gba->colors[i]);
+        // printf("%04X\n", gba->colors[i]);
     }
 
     return gba;
