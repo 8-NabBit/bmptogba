@@ -4,6 +4,7 @@
 #include "bitmap.h"
 #include "macros.h"
 
+// bitmap-specific macro's
 #define SPRITE_DIMENSION 64
 #define BMP_HEADER_X_SIZE_OFFSET 0x12
 #define BMP_HEADER_Y_SIZE_OFFSET 0x16
@@ -79,7 +80,7 @@ void bitmap_stats(const bitmap *bmp) {
     }
     printf("Bitmap 4BPP:\n");
     printf("Image size: %ux%u\n", bitmap_get_x_length(bmp), bitmap_get_y_length(bmp));
-    printf("Number of sprites: 0x%zu\n", bitmap_get_n_sprites(bmp));
+    printf("Number of sprites: %zu\n", bitmap_get_n_sprites(bmp));
     printf("Pixel data size: 0x%06lX\n", bitmap_get_pixel_data_size(bmp));
     printf("Colors: ");
     for (int i = 0; i < N_COLORS; i++) {
@@ -142,6 +143,14 @@ size_t bitmap_get_n_sprites(const bitmap *bmp) {
     return bmp->n_sprites;
 }
 
+void bitmap_set_colors(FILE *f, bitmap *bmp) {
+    for (int i = 0; i < N_COLORS; i++) {
+        for (int j = 0; j <= 2; j++) {
+            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, BMP_HEADER_COLOR_OFFSET(f)+i*4+j);
+        }
+    }
+}
+
 size_t bitmap_get_pixel_data_size(const bitmap *bmp) {
     if (bmp == NULL) {
         fprintf(stderr, "error: bmp null\n");
@@ -189,15 +198,15 @@ void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b) {
     unsigned char remap[16];
     for (int i = 0; i < 16; i++) {
         remap[i] = i;
-        remap[a] = b;
-        remap[b] = a;
-    
-        // swap palette color entries
-        for (int j = 0; j < 3; j++) {
-            unsigned char temp = bmp->colors[a][j];
-            bmp->colors[a][j] = bmp->colors[b][j];
-            bmp->colors[b][j] = temp;
-        }
+    }
+    remap[a] = b;
+    remap[b] = a;
+
+    // swap palette color entries
+    for (int j = 0; j < 3; j++) {
+        unsigned char temp = bmp->colors[a][j];
+        bmp->colors[a][j] = bmp->colors[b][j];
+        bmp->colors[b][j] = temp;
     }
 
     // remap every nibble in pixel data
@@ -209,15 +218,67 @@ void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b) {
 }
 
 void bitmap_swap_tires(bitmap *bmp) {
+    // first tire anim color
+    int count = bitmap_contains_color(bmp, TIRE_TOP_COLOR, TIRE_TOP_COLOR, TIRE_TOP_COLOR);
+    if (count > 1) {
+        fprintf(stderr, "error: multiple colors top tire");
+        bitmap_free(bmp);
+        exit(EXIT_FAILURE);
+    }
 
+    int idx = bitmap_get_color_index(bmp, TIRE_TOP_COLOR, TIRE_TOP_COLOR, TIRE_TOP_COLOR);
+    bitmap_swap_entries(bmp, idx, TIRE_TOP_INDEX);
+
+    // second tire anim color
+    count = bitmap_contains_color(bmp, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR);
+    if (count > 1) {
+        fprintf(stderr, "error: multiple colors bottom tire");
+        bitmap_free(bmp);
+        exit(EXIT_FAILURE);
+    }
+
+    idx = bitmap_get_color_index(bmp, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR);
+    bitmap_swap_entries(bmp, idx, TIRE_BOTTOM_INDEX);
 }
 
-void bitmap_set_colors(FILE *f, bitmap *bmp) {
-    for (int i = 0; i < N_COLORS; i++) {
-        for (int j = 0; j <= 2; j++) {
-            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, BMP_HEADER_COLOR_OFFSET(f)+i*4+j);
-        }
+int bitmap_get_color_index(bitmap *bmp, int r, int g, int b) {
+    if (!bitmap_contains_color(bmp, r, g, b)) {
+        fprintf(stderr, "error: cannot get index, color not here");
+        bitmap_free(bmp);
+        exit(EXIT_FAILURE);
     }
+
+    for (size_t i = 0; i < N_COLORS; i++) {
+        if (bmp->colors[i][RED] != r) {
+            continue;
+        }
+        if (bmp->colors[i][GREEN] != g) {
+            continue;
+        }
+        if (bmp->colors[i][BLUE] != b) {
+            continue;
+        }
+        return i;
+    }
+    return -1;
+}
+
+int bitmap_contains_color(bitmap *bmp, int r, int g, int b) {
+    int count = 0;
+
+    for (size_t i = 0; i < N_COLORS; i++) {
+        if (bmp->colors[i][RED] != r) {
+            continue;
+        }
+        if (bmp->colors[i][GREEN] != g) {
+            continue;
+        }
+        if (bmp->colors[i][BLUE] != b) {
+            continue;
+        }
+        count++;
+    }
+    return count;
 }
 
 unsigned short bitmap_color_to_gba(bitmap *bmp, int idx)
