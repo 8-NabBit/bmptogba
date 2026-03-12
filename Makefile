@@ -38,6 +38,7 @@ gba.o: gba.c gba.h
 
 clean:
 	rm -f $(OBJ) $(TARGET)
-	rm -f ./output.gba
+	rm -f ./tiles.gba
+	rm -f ./palette.bin
 
 .PHONY: clean

@@ -344,9 +344,11 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     }
 
     // colors
+    gba->n_colors = 0;
     for (int i = 0; i < N_COLORS; i++) {
         // printf("%u, %u, %u\n", bmp->colors[i][RED], bmp->colors[i][GREEN], bmp->colors[i][BLUE]);
         gba->colors[i] = bitmap_color_to_gba(bmp, i);
+        gba->n_colors++;
         // printf("%04X\n", gba->colors[i]);
     }
 
