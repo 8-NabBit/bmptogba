@@ -146,7 +146,7 @@ size_t bitmap_get_n_sprites(const bitmap *bmp) {
 void bitmap_set_colors(FILE *f, bitmap *bmp) {
     for (int i = 0; i < N_COLORS; i++) {
         for (int j = 0; j <= 2; j++) {
-            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, BMP_HEADER_COLOR_OFFSET(f)+i*4+j);
+            bmp->colors[i][j] = (unsigned char)file_read_le(f, 1, (int)(BMP_HEADER_COLOR_OFFSET(f))+i*4+j);
         }
     }
 }
@@ -197,7 +197,7 @@ void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b) {
     // build remap table with identity, but swap a and b
     unsigned char remap[16];
     for (int i = 0; i < 16; i++) {
-        remap[i] = i;
+        remap[i] = (unsigned char)i;
     }
     remap[a] = b;
     remap[b] = a;
@@ -227,7 +227,7 @@ void bitmap_swap_tires(bitmap *bmp) {
     }
 
     int idx = bitmap_get_color_index(bmp, TIRE_TOP_COLOR, TIRE_TOP_COLOR, TIRE_TOP_COLOR);
-    bitmap_swap_entries(bmp, idx, TIRE_TOP_INDEX);
+    bitmap_swap_entries(bmp, (unsigned char)idx, TIRE_TOP_INDEX);
 
     // second tire anim color
     count = bitmap_contains_color(bmp, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR);
@@ -238,7 +238,7 @@ void bitmap_swap_tires(bitmap *bmp) {
     }
 
     idx = bitmap_get_color_index(bmp, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR);
-    bitmap_swap_entries(bmp, idx, TIRE_BOTTOM_INDEX);
+    bitmap_swap_entries(bmp, (unsigned char)idx, TIRE_BOTTOM_INDEX);
 }
 
 int bitmap_get_color_index(bitmap *bmp, int r, int g, int b) {
@@ -248,7 +248,7 @@ int bitmap_get_color_index(bitmap *bmp, int r, int g, int b) {
         exit(EXIT_FAILURE);
     }
 
-    for (size_t i = 0; i < N_COLORS; i++) {
+    for (int i = 0; i < N_COLORS; i++) {
         if (bmp->colors[i][RED] != r) {
             continue;
         }
@@ -281,7 +281,7 @@ int bitmap_contains_color(bitmap *bmp, int r, int g, int b) {
     return count;
 }
 
-unsigned short bitmap_color_to_gba(bitmap *bmp, int idx)
+unsigned short bitmap_color_to_gba(const bitmap *bmp, int idx)
 {
     unsigned short r = bmp->colors[idx][RED];
     unsigned short g = bmp->colors[idx][GREEN];
@@ -293,7 +293,7 @@ unsigned short bitmap_color_to_gba(bitmap *bmp, int idx)
         | (((b >> 3) & 31) << 10);
     
     // set highest unused bit, not perfect but mksc is very inconsistent with it
-    color |= ((r >= 128 && g >= 128 && b >= 128) << 15);
+    color |= (unsigned short)((r >= 128 && g >= 128 && b >= 128) << 15);
 
     return color;
 }
@@ -396,10 +396,10 @@ gameboy *bitmap_convert_to_gba(const bitmap *bmp) {
     }
 
     // sprites
-    for (int sprite = 0; sprite < bitmap_get_n_sprites(bmp); sprite++) {
+    for (size_t sprite = 0; sprite < bitmap_get_n_sprites(bmp); sprite++) {
         // tiles
-        for (int tile = 0; tile < TILES_IN_SPRITE; tile++) {
-            unsigned char *tile_ptr = bitmap_get_tile(bmp, sprite, tile);
+        for (size_t tile = 0; tile < TILES_IN_SPRITE; tile++) {
+            unsigned char *tile_ptr = bitmap_get_tile(bmp, (unsigned)sprite, (unsigned)tile);
             gba->tiles_ptr_array[sprite * TILES_IN_SPRITE + tile] = tile_ptr;
         }
     }

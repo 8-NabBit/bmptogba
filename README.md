@@ -1,2 +1,2 @@
 ## A 4bpp bitmap to 4bpp gba converter.
-To be used for converting spritesheets of racer sprites made in Blender.
+To be used for converting spritesheets of racer sprites made in Blender. Also supports regular graphics that aren't racers. The output will be the graphics in tiles.gba and colors in palette.bin.

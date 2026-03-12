@@ -95,7 +95,7 @@ int bitmap_contains_color(bitmap *bmp, int r, int g, int b);
 
     Returns a short with gba BGR555 color values
 */
-unsigned short bitmap_color_to_gba(bitmap *bmp, int idx);
+unsigned short bitmap_color_to_gba(const bitmap *bmp, int idx);
 
 /*  Gets the swapped pixel data of two pixels on the bitmap, given an offset 
 

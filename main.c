@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bitmap.h"
 
@@ -23,7 +24,7 @@ int main(int argc, char* argv[]) {
 
     // start with path
     if (argv[1][0] == '-') {
-        printf("error: first argument must be a bitmap path\n");
+        fprintf(stderr, "error: first argument must be a bitmap path\n");
         return 1;
     }
 
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
 
     FILE *f = fopen(argv[1], "rb");
     if (f == NULL) {
-        perror("bitmap file null\n");
+        fprintf(stderr, "error: bitmap file null\n");
         exit(EXIT_FAILURE);
     }
 

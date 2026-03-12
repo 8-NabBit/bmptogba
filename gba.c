@@ -44,7 +44,7 @@ void gameboy_write_to_file(gameboy *gba) {
     }
 
     for (size_t i = 0; i < gba->n_tiles; i++) {
-        int n = fwrite(gba->tiles_ptr_array[i], sizeof(unsigned char), TILE_SIZE, f);
+        size_t n = fwrite(gba->tiles_ptr_array[i], sizeof(unsigned char), TILE_SIZE, f);
 
         if (n != TILE_SIZE) {
             fprintf(stderr, "error: number of objects written is incorrect tiles\n");
@@ -61,7 +61,7 @@ void gameboy_write_to_file(gameboy *gba) {
         exit(EXIT_FAILURE);
     }
 
-    int n = fwrite(gba->colors, sizeof(unsigned short), gba->n_colors, g);
+    size_t n = fwrite(gba->colors, sizeof(unsigned short), gba->n_colors, g);
     if (n != gba->n_colors) {
         fprintf(stderr, "error: number of objects written is incorrect color");
         fclose(g);
