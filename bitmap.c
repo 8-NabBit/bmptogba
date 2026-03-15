@@ -187,7 +187,7 @@ void bitmap_swap_entries(bitmap *bmp, unsigned char a, unsigned char b) {
     }
 
     if (a >= N_COLORS || b >= N_COLORS) {
-        fprintf(stderr, "error: can't swap entries that dont exist");
+        fprintf(stderr, "error: can't swap entries that dont exist\n");
         exit(EXIT_FAILURE);
     }
 
@@ -221,7 +221,7 @@ void bitmap_swap_tires(bitmap *bmp) {
     // first tire anim color
     int count = bitmap_contains_color(bmp, TIRE_TOP_COLOR, TIRE_TOP_COLOR, TIRE_TOP_COLOR);
     if (count > 1) {
-        fprintf(stderr, "error: multiple colors top tire");
+        fprintf(stderr, "error: multiple colors top tire\n");
         bitmap_free(bmp);
         exit(EXIT_FAILURE);
     }
@@ -232,7 +232,7 @@ void bitmap_swap_tires(bitmap *bmp) {
     // second tire anim color
     count = bitmap_contains_color(bmp, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR, TIRE_BOTTOM_COLOR);
     if (count > 1) {
-        fprintf(stderr, "error: multiple colors bottom tire");
+        fprintf(stderr, "error: multiple colors bottom tire\n");
         bitmap_free(bmp);
         exit(EXIT_FAILURE);
     }
@@ -243,7 +243,7 @@ void bitmap_swap_tires(bitmap *bmp) {
 
 int bitmap_get_color_index(bitmap *bmp, int r, int g, int b) {
     if (!bitmap_contains_color(bmp, r, g, b)) {
-        fprintf(stderr, "error: cannot get index, color not here");
+        fprintf(stderr, "error: cannot get index, color not here\n");
         bitmap_free(bmp);
         exit(EXIT_FAILURE);
     }
