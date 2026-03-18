@@ -8,7 +8,7 @@
 
 enum Flags {
     STATS,
-    NORACER,
+    TIRES,
     N_FLAGS
 };
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     if (argc == 1) {
         printf(
             "Arguments for bmp to gba converter: "
-            "\"bmppath\" [-stats] [-noracer]\n");
+            "\"bmppath\" [-stats] [-tires]\n");
         return 0;
     }
 
@@ -34,8 +34,8 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "-stats") == 0) {
             flags[STATS] = 1;
         }
-        else if (strcmp(argv[i], "-noracer") == 0) {
-            flags[NORACER] = 1;
+        else if (strcmp(argv[i], "-tires") == 0) {
+            flags[TIRES] = 1;
         }
         else {
             printf("warning: unknown flag '%s'\n", argv[i]);
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
         printf("\n\n");
     }
 
-    if (!flags[NORACER]) {
+    if (flags[TIRES]) {
         bitmap_swap_tires(bmp);
     }
 
