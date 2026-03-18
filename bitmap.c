@@ -243,7 +243,9 @@ void bitmap_swap_tires(bitmap *bmp) {
 
 int bitmap_get_color_index(bitmap *bmp, int r, int g, int b) {
     if (!bitmap_contains_color(bmp, r, g, b)) {
-        printf("warning: cannot get index, color not included\n");
+        fprintf(stderr, "error: cannot get index, color not included\n");
+        bitmap_free(bmp);
+        exit(EXIT_FAILURE);
     }
 
     for (int i = 0; i < N_COLORS; i++) {
